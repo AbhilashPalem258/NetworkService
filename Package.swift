@@ -4,5 +4,18 @@
 import PackageDescription
 
 let package = Package(
-    name: "NetworkService"
+    name: "NetworkService",
+    platforms: [.iOS(.v16)],
+    products: [
+        .library(name: "NetworkService", targets: ["NetworkService"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.9.1")
+    ],
+    targets: [
+        .target(
+            name: "NetworkService",
+            dependencies: [.product(name: "Alamofire", package: "Alamofire")]
+        )
+    ]
 )
