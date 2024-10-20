@@ -7,6 +7,7 @@
 
 import Foundation
 import Alamofire
+import Combine
 
 //struct AlamofireSessionProvider: SessionProvidable {
 //    static func dataSession<S>(_ configuration: NetworkServiceConfiguration) -> S where S : SessionProtocol {
@@ -61,6 +62,27 @@ class ResourceSession {
         self.configuration = configuration
     }
     
+    func fetchResource(_ route: any APIRoutable) -> AnyPublisher<Data, NetworkAPIFailure> {
+        Future<Data, NetworkAPIFailure> {[weak self] promise in
+            #if swift(>=6)
+                nonisolated(unsafe) let promise = promise
+            #endif
+            guard let self else {
+                promise(.failure(NetworkAPIFailure.genericFailure))
+                return
+            }
+            request(route, baseURL:  configuration.baseURL) { result in
+                switch result {
+                case .success(let model):
+                    promise(.success(model))
+                case .failure(let failure):
+                    promise(.failure(failure))
+                }
+            }
+        }
+        .eraseToAnyPublisher()
+    }
+    
     private func constructFullURL(route: any APIRoutable, baseURL: URL) throws -> URL {
         guard let url = URL(string: route.path, relativeTo: baseURL) else {
             throw URLError(.badURL)
@@ -88,6 +110,8 @@ class DataSession: SessionProtocol {
     }
     
     func request<T>(_ route: any APIRoutable, baseURL: URL, responseType: T.Type, completion: @escaping @Sendable (Result<T, NetworkAPIFailure>) -> Void) where T : Decodable, T : Sendable {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
         do {
             session.request(
                 try constructFullURL(route: route, baseURL: baseURL),
@@ -96,7 +120,7 @@ class DataSession: SessionProtocol {
                 headers: .init(route.headers)
             )
             .validateForServerError()
-            .responseDecodable(of: responseType) { response in
+            .responseDecodable(of: responseType, decoder: decoder) { response in
                 if let value = response.value {
                     completion(.success(value))
                 } else {
@@ -106,6 +130,27 @@ class DataSession: SessionProtocol {
         } catch {
             completion(.failure(.genericFailure))
         }
+    }
+    
+    func fetchData<T: Decodable & Sendable>(_ route: any APIRoutable, responseType: T.Type) -> AnyPublisher<T, NetworkAPIFailure> {
+        Future<T, NetworkAPIFailure> {[weak self] promise in
+            #if swift(>=6)
+                nonisolated(unsafe) let promise = promise
+            #endif
+            guard let self else {
+                promise(.failure(NetworkAPIFailure.genericFailure))
+                return
+            }
+            request(route, baseURL:  configuration.baseURL, responseType: responseType) { result in
+                switch result {
+                case .success(let model):
+                    promise(.success(model))
+                case .failure(let failure):
+                    promise(.failure(failure))
+                }
+            }
+        }
+        .eraseToAnyPublisher()
     }
     
     private func constructFullURL(route: any APIRoutable, baseURL: URL) throws -> URL {

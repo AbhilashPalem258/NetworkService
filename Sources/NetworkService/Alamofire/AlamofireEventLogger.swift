@@ -27,18 +27,16 @@ struct AFEventLogger: EventMonitor {
             String(decoding: data, as: UTF8.self)
         } ?? "None"
         
-        let allResponseHeaders = response.response?.allHeaderFields ?? [:]
-        
-        let responseStr = response.response.debugDescription
+        let allResponseHeaders = response.response?.allHeaderFields.data()?.prettyPrintedJSONString ?? "None"
         
         let message = """
         =============================================================
-        Request: \(request.request?.urlRequest?.debugDescription ?? "None")
+        Request: \(request.request?.urlRequest?.url?.absoluteString ?? "None")
         Request Body: \(httpBody)
         StatusCode: \(String(describing: response.response?.statusCode))
         Request Headers: \(String(describing: allRequestHeaders))
         Response Headers: \(String(describing: allResponseHeaders))
-        Response: \(responseStr)
+        Response: \(response.data?.prettyPrintedJSONString ?? "None")
         ===============================================================
         """
         

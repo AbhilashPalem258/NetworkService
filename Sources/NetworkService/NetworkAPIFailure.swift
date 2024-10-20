@@ -5,7 +5,7 @@
 //  Created by Abhilash Palem on 16/10/24.
 //
 
-enum NetworkAPIFailure: Error {
+public enum NetworkAPIFailure: Error {
     case unAuthenticated
     case noInternet
     case serverNotReachable

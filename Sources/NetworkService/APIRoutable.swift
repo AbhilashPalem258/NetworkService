@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum HTTPMethod {
+public enum HTTPMethod {
     case get
     case post
     case put
@@ -27,7 +27,7 @@ enum HTTPMethod {
     }
 }
 
-protocol APIRoutable {
+public protocol APIRoutable {
     var httpMethod: HTTPMethod {get}
     var parameters: AnyEncodable? {get}
     var path: String { get }
@@ -43,25 +43,25 @@ extension APIRoutable {
     }
 }
 
-struct AnyEncodable: Encodable {
+public struct AnyEncodable: Encodable {
 
     private let _encode: (Encoder) throws -> Void
     public init<T: Encodable>(_ wrapped: T) {
         _encode = wrapped.encode
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         try _encode(encoder)
     }
 }
 
-extension Encodable {
+public extension Encodable {
     func eraseToAnyEncodable() -> AnyEncodable {
         .init(self)
     }
 }
 
-prefix func ~ (value: any Encodable) -> AnyEncodable {
+public prefix func ~ (value: any Encodable) -> AnyEncodable {
     value.eraseToAnyEncodable()
 }
 

@@ -12,4 +12,11 @@ public struct NetworkServiceConfiguration {
     let baseURL: URL
     let logEnabled: Bool
     let defaultHeaders: [String: String]?
+    
+    public init(requestTimeout: Double, baseURL: URL, logEnabled: Bool, defaultHeaders: [String : String]?) {
+        self.requestTimeout = requestTimeout
+        self.baseURL = baseURL
+        self.logEnabled = logEnabled
+        self.defaultHeaders = defaultHeaders
+    }
 }
